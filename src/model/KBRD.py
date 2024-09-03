@@ -34,6 +34,7 @@ class KBRD:
         attn_head,
         resp_max_length,
         entity_max_length,
+        num_recommendations: int,  # Added this parameter
     ):
         self.seed = seed
         if self.seed is not None:
@@ -105,6 +106,8 @@ class KBRD:
                 self.conv_model, user_hidden_size=self.entity_hidden_size
             ).to(self.device)
         self.crs_conv_model = self.accelerator.prepare(self.crs_conv_model)
+
+        self.num_recommendations = num_recommendations
 
     def get_rec(self, conv_dict):
         data_dict = {
@@ -283,7 +286,7 @@ class KBRD:
         """
         recommended_items, _ = self.get_rec(conv_dict)
         recommended_items_str = ""
-        for i, item_id in enumerate(recommended_items[0][:3]):
+        for i, item_id in enumerate(recommended_items[0][:self.num_recommendations]):
             recommended_items_str += f"{i+1}: {id2entity[item_id]}\n"
 
         _, generated_response = self.get_conv(conv_dict)
@@ -312,6 +315,7 @@ if __name__ == "__main__":
         context_max_length=200,
         entity_max_length=32,
         tokenizer_path="../utils/tokenizer/bart-base",
+        num_recommendations=1
     )
     # print(kbrd)
     context_dict = {

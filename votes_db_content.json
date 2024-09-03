@@ -1,0 +1,74 @@
+{
+  "votes": [
+    {
+      "id": 1,
+      "user_id": "cb40c3c2-8784-435f-be60-9a76cd120882",
+      "crs1": "kbrd_redial",
+      "crs2": "kbrd_opendialkg",
+      "vote": "kbrd_redial",
+      "feedback": ""
+    },
+    {
+      "id": 2,
+      "user_id": "ae9974c6-993c-4490-87e2-b03ce89089f4",
+      "crs1": "kbrd_redial",
+      "crs2": "kbrd_opendialkg",
+      "vote": "kbrd_redial",
+      "feedback": ""
+    },
+    {
+      "id": 3,
+      "user_id": "30388ab1-e29c-43eb-aa0d-1b012071f8dc",
+      "crs1": "kbrd_redial",
+      "crs2": "kbrd_opendialkg",
+      "vote": "kbrd_redial",
+      "feedback": ""
+    },
+    {
+      "id": 4,
+      "user_id": "a5abb75b-a9e8-4c36-a026-6c8a2d8eb737",
+      "crs1": "kbrd_redial",
+      "crs2": "kbrd_opendialkg",
+      "vote": "kbrd_redial",
+      "feedback": ""
+    },
+    {
+      "id": 5,
+      "user_id": "65354e77-4667-4311-93b0-6b1e1c0e3a2b",
+      "crs1": "kbrd_redial",
+      "crs2": "kbrd_opendialkg",
+      "vote": "kbrd_redial",
+      "feedback": ""
+    },
+    {
+      "id": 6,
+      "user_id": "9cb5e34a-5c1f-4b95-a2e8-9ae788b9ae66",
+      "crs1": "kbrd_redial",
+      "crs2": "kbrd_opendialkg",
+      "vote": "kbrd_redial",
+      "feedback": ""
+    },
+    {
+      "id": 7,
+      "user_id": "aa0db0a3-7d0a-41f5-a56b-60ba0ed4af94",
+      "crs1": "kbrd_redial",
+      "crs2": "kbrd_opendialkg",
+      "vote": "kbrd_redial",
+      "feedback": ""
+    },
+    {
+      "id": 8,
+      "user_id": "f3de889e-cd07-4f2c-9afd-d7a74732943b",
+      "crs1": "kbrd_redial",
+      "crs2": "kbrd_opendialkg",
+      "vote": "kbrd_redial",
+      "feedback": null
+    }
+  ],
+  "sqlite_sequence": [
+    {
+      "name": "votes",
+      "seq": 8
+    }
+  ]
+}

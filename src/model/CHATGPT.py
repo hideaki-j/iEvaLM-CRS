@@ -128,9 +128,10 @@ def annotate_chat(messages, logit_bias=None) -> str:
 
 
 class CHATGPT:
-    def __init__(self, seed, debug, kg_dataset) -> None:
+    def __init__(self, seed, debug, kg_dataset, num_recommendations: int) -> None:
         self.seed = seed
         self.debug = debug
+        self.num_recommendations = num_recommendations  # Store as instance variable
 
         if self.seed is not None:
             set_seed(self.seed)
@@ -148,7 +149,7 @@ class CHATGPT:
             if info["name"] in self.entity2id:
                 self.id2entityid[id] = self.entity2id[info["name"]]
 
-        self.item_embedding_path = f"data/embed_item/{self.kg_dataset}"
+        self.item_embedding_path = f"data/embed_items/{self.kg_dataset}"
 
         item_emb_list = []
         id2item_id = []
@@ -270,7 +271,7 @@ class CHATGPT:
         recommended_items, _ = self.get_rec(conv_dict)
 
         recommended_items_str = ""
-        for i, item in enumerate(recommended_items[0][:3]):
+        for i, item in enumerate(recommended_items[0][:self.num_recommendations]):
             recommended_items_str += f"{i+1}: {id2entity[item]}\n"
 
         _, generated_response = self.get_conv(conv_dict)

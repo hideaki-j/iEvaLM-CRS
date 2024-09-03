@@ -33,6 +33,7 @@ class UNICRS:
         num_bases,
         rec_model,
         conv_model,
+        num_recommendations: int,
     ):
         if seed is not None:
             set_seed(seed)
@@ -125,6 +126,8 @@ class UNICRS:
             self.conv_prompt_encoder.load(self.conv_model_path)
         self.conv_prompt_encoder = self.conv_prompt_encoder.to(self.device)
         self.conv_prompt_encoder = self.accelerator.prepare(self.conv_prompt_encoder)
+
+        self.num_recommendations = num_recommendations
 
     def get_rec(self, conv_dict):
         text_list = []
@@ -438,7 +441,7 @@ class UNICRS:
         recommended_items, _ = self.get_rec(conv_dict)
 
         recommended_items_str = ""
-        for i, item in enumerate(recommended_items[0][:3]):
+        for i, item in enumerate(recommended_items[0][:self.num_recommendations]):
             recommended_items_str += f"{i+1}: {id2entity[item]}\n"
 
         _, generated_response = self.get_conv(conv_dict)

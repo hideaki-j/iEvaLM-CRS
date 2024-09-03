@@ -1,0 +1,17 @@
+seed: 42
+num_bases: 8
+kg_dataset: "opendialkg"
+debug: false
+hidden_size: 128
+entity_hidden_size: 128
+rec_model: "data/models/kbrd_rec_opendialkg/"
+conv_model: "data/models/kbrd_conv_opendialkg/"
+context_max_length: 200
+tokenizer_path: "facebook/bart-base"
+encoder_layers: 2
+decoder_layers: 2
+text_hidden_size: 300
+attn_head: 2
+resp_max_length: 128
+entity_max_length: 32
+num_recommendations: 1

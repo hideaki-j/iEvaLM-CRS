@@ -1,4 +1,5 @@
 import sys
+import logging
 from typing import Any, Dict
 
 sys.path.append("..")
@@ -7,6 +8,9 @@ from src.model.BARCOR import BARCOR
 from src.model.CHATGPT import CHATGPT
 from src.model.KBRD import KBRD
 from src.model.UNICRS import UNICRS
+
+# Set up basic logging configuration
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 name2class = {
     "kbrd": KBRD,
@@ -19,6 +23,7 @@ name2class = {
 class CRSModel:
     def __init__(self, crs_model, *args, **kwargs) -> None:
         model_class = name2class[crs_model]
+        logging.debug(f"Initializing {crs_model} model with args: {args} and kwargs: {kwargs}")
         self.crs_model = model_class(*args, **kwargs)
 
     def get_rec(self, conv_dict):
@@ -35,6 +40,7 @@ class CRSModel:
         Args:
             conv_dict: Conversation context.
             id2entity: Mapping from entity id to entity name.
+            **kwargs: Additional keyword arguments to pass to the underlying model.
 
         Returns:
             Generated response.

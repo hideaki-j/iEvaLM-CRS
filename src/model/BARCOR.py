@@ -25,6 +25,7 @@ class BARCOR:
         rec_model,
         conv_model,
         resp_max_length,
+        num_recommendations: int,  # Added this parameter
     ):
         self.seed = seed
         if self.seed is not None:
@@ -62,6 +63,8 @@ class BARCOR:
         self.kg_dataset_path = f"data/{self.kg_dataset}"
         with open(f"{self.kg_dataset_path}/entity2id.json", "r", encoding="utf-8") as f:
             self.entity2id = json.load(f)
+
+        self.num_recommendations = num_recommendations  # Store as instance variable
 
     def get_rec(self, conv_dict):
         # dataset
@@ -255,7 +258,7 @@ class BARCOR:
         """
         recommended_items, _ = self.get_rec(conv_dict)
         recommended_items_str = ""
-        for i, item_id in enumerate(recommended_items[0][:3]):
+        for i, item_id in enumerate(recommended_items[0][:self.num_recommendations]):
             recommended_items_str += f"{i+1}: {id2entity[item_id]}\n"
 
         _, generated_response = self.get_conv(conv_dict)

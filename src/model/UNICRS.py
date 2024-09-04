@@ -1,7 +1,7 @@
 import json
 import sys
 from collections import defaultdict
-from typing import Any, Dict
+from typing import Any, Dict, Tuple, List
 
 import torch
 from accelerate import Accelerator
@@ -425,8 +425,8 @@ class UNICRS:
         self,
         conv_dict: Dict[str, Any],
         id2entity: Dict[int, str],
-        movie_token: str = "<mask>",
-    ) -> str:
+        movie_token: str = "<mask>"
+    ) -> Tuple[str, List[str]]:
         """Generates a response given a conversation context.
 
         Args:
@@ -436,13 +436,16 @@ class UNICRS:
               "<mask>".
 
         Returns:
-            Generated response.
+            A tuple containing the generated response and a list of recommended item names.
         """
         recommended_items, _ = self.get_rec(conv_dict)
 
         recommended_items_str = ""
+        top_recommendations_names = []
         for i, item in enumerate(recommended_items[0][:self.num_recommendations]):
-            recommended_items_str += f"{i+1}: {id2entity[item]}\n"
+            item_name = id2entity[item]
+            recommended_items_str += f"{i+1}: {item_name}\n"
+            top_recommendations_names.append(item_name)
 
         _, generated_response = self.get_conv(conv_dict)
 
@@ -451,11 +454,13 @@ class UNICRS:
         ]
         for i in range(str.count(generated_response, movie_token)):
             generated_response = generated_response.replace(
-                movie_token, id2entity[recommended_items[i]], 1
+                movie_token, top_recommendations_names[i], 1
             )
         generated_response = generated_response.strip()
 
-        return (
+        final_response = (
             f"I would recommend the following items: {recommended_items_str}"
             f"{generated_response}"
         )
+
+        return final_response, top_recommendations_names

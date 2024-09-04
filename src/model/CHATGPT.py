@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Tuple, List
 
 import numpy as np
 import openai
@@ -258,7 +258,7 @@ class CHATGPT:
         response_op = annotate_chat(context_list, logit_bias=logit_bias)
         return response_op[0]
 
-    def get_response(self, conv_dict: Dict[str, Any], id2entity: Dict[int, str]) -> str:
+    def get_response(self, conv_dict: Dict[str, Any], id2entity: Dict[int, str]) -> Tuple[str, List[str]]:
         """Generates a response given a conversation context.
 
         Args:
@@ -266,17 +266,22 @@ class CHATGPT:
             id2entity: Mapping from entity id to entity name.
 
         Returns:
-            Generated response.
+            A tuple containing the generated response and a list of recommended item names.
         """
         recommended_items, _ = self.get_rec(conv_dict)
 
         recommended_items_str = ""
+        top_recommendations_names = []
         for i, item in enumerate(recommended_items[0][:self.num_recommendations]):
-            recommended_items_str += f"{i+1}: {id2entity[item]}\n"
+            item_name = id2entity[item]
+            recommended_items_str += f"{i+1}: {item_name}\n"
+            top_recommendations_names.append(item_name)
 
         _, generated_response = self.get_conv(conv_dict)
 
-        return (
+        final_response = (
             f"I would recommend the following items: {recommended_items_str}"
             f"{generated_response}"
         )
+
+        return final_response, top_recommendations_names

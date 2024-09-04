@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #chat-container {
+            width: 400px;
+            height: 500px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-right: 20px;
+        }
+        #message-input {
+            width: 300px;
+        }
+        #recommendations-container {
+            width: 250px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            max-height: 500px; /* Set a maximum height */
+            overflow-y: auto; /* Add vertical scrollbar when needed */
+        }
+        .recommendation-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .recommendation-table th, .recommendation-table td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: left;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .recommendation-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div id="chat-container"></div>
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <div id="recommendations-container">
+        <h3>Recommendations</h3>
+        <table class="recommendation-table">
+            <thead>
+                <tr>
+                    <th>Turn</th>
+                    <th>Recommendation</th>
+                    <th>Wikipedia</th>
+                </tr>
+            </thead>
+            <tbody id="recommendations-list"></tbody>
+        </table>
+    </div>
+
+    <script>
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            if (message) {
+                appendMessage('User', message);
+                fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    appendMessage('Bot', data.response);
+                    if (data.recommendations) {
+                        updateRecommendations(data.recommendations);
+                    }
+                });
+                messageInput.value = '';
+            }
+        }
+
+        function appendMessage(sender, message) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageElement = document.createElement('p');
+            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function updateRecommendations(recommendations) {
+            const recommendationsList = document.getElementById('recommendations-list');
+            recommendationsList.innerHTML = ''; // Clear existing recommendations
+            recommendations.forEach(item => {
+                const row = document.createElement('tr');
+                const turnCell = document.createElement('td');
+                const itemCell = document.createElement('td');
+                const wikiCell = document.createElement('td');
+                turnCell.textContent = item.turn;
+                itemCell.textContent = item.item;
+                if (item.wiki_url) {
+                    const wikiLink = document.createElement('a');
+                    wikiLink.href = item.wiki_url;
+                    wikiLink.textContent = item.wiki_title || 'Wikipedia';
+                    wikiLink.target = '_blank';
+                    wikiCell.appendChild(wikiLink);
+                } else {
+                    wikiCell.textContent = 'N/A';
+                }
+                row.appendChild(turnCell);
+                row.appendChild(itemCell);
+                row.appendChild(wikiCell);
+                recommendationsList.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>

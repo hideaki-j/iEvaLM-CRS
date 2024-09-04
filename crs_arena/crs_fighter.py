@@ -6,7 +6,7 @@ model name and configuration file.
 """
 
 import json
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 from crs_arena.utils import get_crs_model
 from src.model.utils import get_entity
@@ -100,7 +100,7 @@ class CRSFighter:
             "template": [],
         }
 
-    def reply(self, input_message: str, history: List["Message"]) -> str:
+    def reply(self, input_message: str, history: List["Message"]) -> Tuple[str, List[str]]:
         """Generates a reply to the user input.
 
         Args:
@@ -114,9 +114,9 @@ class CRSFighter:
         conversation_dict = self._process_user_input(input_message, history)
 
         # Get response
-        response = self.model.get_response(
+        response, top_recommendations_names = self.model.get_response(
             conversation_dict,
             self.id2entity,
             **self.response_generation_args,
         )
-        return response
+        return response, top_recommendations_names

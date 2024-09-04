@@ -7,67 +7,174 @@
     <style>
         body {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: flex-start;
             height: 100vh;
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #e5ddd5;
         }
-        #chat-container {
-            width: 400px;
-            height: 500px;
-            border: 1px solid #ccc;
-            overflow-y: scroll;
-            padding: 10px;
-            margin-right: 20px;
+        #persona-container, #recommendations-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            padding: 15px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
         }
-        #message-input {
-            width: 300px;
+        #persona-container {
+            width: 250px;
+            flex-shrink: 0;
         }
         #recommendations-container {
-            width: 250px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            max-height: 500px; /* Set a maximum height */
-            overflow-y: auto; /* Add vertical scrollbar when needed */
+            flex-grow: 1;
+            margin-left: 20px;
+            overflow-x: auto;
         }
-        .recommendation-table {
+        #chat-and-input {
+            width: 400px;
+            margin: 0 20px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+            flex-shrink: 0;
+        }
+        #chat-container {
+            flex-grow: 1;
+            background-color: #fff;
+            border-radius: 8px 8px 0 0;
+            overflow-y: scroll;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 15px;
+            position: relative;
+            color: #303030;
+            word-wrap: break-word;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #dcf8c6;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: #e8e8e8;  /* Light gray background for system messages */
+        }
+        #input-area {
+            display: flex;
+            background-color: #f0f0f0;
+            border-radius: 0 0 8px 8px;
+            padding: 10px;
+        }
+        #message-input {
+            flex-grow: 1;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 16px;
+            outline: none;
+        }
+        #send-button {
+            background-color: #128C7E;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #send-button:hover {
+            background-color: #075E54;
+        }
+        .persona-table, .recommendations-table {
             width: 100%;
             border-collapse: collapse;
         }
-        .recommendation-table th, .recommendation-table td {
+        .persona-table th, .persona-table td,
+        .recommendations-table th, .recommendations-table td {
             border: 1px solid #ddd;
-            padding: 4px;
+            padding: 8px;
             text-align: left;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
-        .recommendation-table th {
-            background-color: #f2f2f2;
+        .persona-table th, .recommendations-table th {
+            background-color: #128C7E;
+            color: white;
+        }
+        .wiki-link {
+            color: #128C7E;
+            text-decoration: none;
+        }
+        .wiki-link:hover {
+            text-decoration: underline;
+        }
+        .preference-result {
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+        }
+        .popup {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .preference-result:hover .popup {
+            visibility: visible;
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <div>
+    <div id="persona-container">
+        <h3>Persona</h3>
+        <table class="persona-table">
+            <tbody id="persona-list"></tbody>
+        </table>
+    </div>
+    <div id="chat-and-input">
         <div id="chat-container"></div>
-        <input type="text" id="message-input" placeholder="Type your message...">
-        <button onclick="sendMessage()">Send</button>
+        <div id="input-area">
+            <input type="text" id="message-input" placeholder="Type a message">
+            <button id="send-button" onclick="sendMessage()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
     </div>
     <div id="recommendations-container">
         <h3>Recommendations</h3>
-        <table class="recommendation-table">
+        <table id="recommendations-table" class="recommendations-table">
             <thead>
-                <tr>
+                <tr id="recommendations-header">
                     <th>Turn</th>
-                    <th>Recommendation</th>
+                    <th>Item</th>
                     <th>Wikipedia</th>
+                    <!-- Persona headers will be dynamically added here -->
                 </tr>
             </thead>
-            <tbody id="recommendations-list"></tbody>
+            <tbody id="recommendations-body"></tbody>
         </table>
     </div>
 
@@ -97,37 +204,109 @@
 
         function appendMessage(sender, message) {
             const chatContainer = document.getElementById('chat-container');
-            const messageElement = document.createElement('p');
-            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${sender.toLowerCase()}-message`;
+            messageElement.textContent = message;
             chatContainer.appendChild(messageElement);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
+        function loadPersona() {
+            fetch('/persona')
+                .then(response => response.json())
+                .then(data => {
+                    const personaList = document.getElementById('persona-list');
+                    const recommendationsHeader = document.getElementById('recommendations-header');
+                    personaList.innerHTML = ''; // Clear existing persona data
+                    data.forEach(([key, value]) => {
+                        // Update persona list
+                        const row = document.createElement('tr');
+                        const keyCell = document.createElement('th');
+                        const valueCell = document.createElement('td');
+                        keyCell.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        valueCell.textContent = value;
+                        row.appendChild(keyCell);
+                        row.appendChild(valueCell);
+                        personaList.appendChild(row);
+
+                        // Add header to recommendations table
+                        const th = document.createElement('th');
+                        th.textContent = `${key}: ${value}`;
+                        recommendationsHeader.appendChild(th);
+                    });
+                });
+        }
+
         function updateRecommendations(recommendations) {
-            const recommendationsList = document.getElementById('recommendations-list');
-            recommendationsList.innerHTML = ''; // Clear existing recommendations
+            const recommendationsBody = document.getElementById('recommendations-body');
+            
+            // Clear existing recommendations
+            recommendationsBody.innerHTML = '';
+            
+            // Populate table rows
             recommendations.forEach(item => {
                 const row = document.createElement('tr');
+                
+                // Turn
                 const turnCell = document.createElement('td');
-                const itemCell = document.createElement('td');
-                const wikiCell = document.createElement('td');
                 turnCell.textContent = item.turn;
+                row.appendChild(turnCell);
+                
+                // Item
+                const itemCell = document.createElement('td');
                 itemCell.textContent = item.item;
+                row.appendChild(itemCell);
+                
+                // Wikipedia
+                const wikiCell = document.createElement('td');
                 if (item.wiki_url) {
                     const wikiLink = document.createElement('a');
                     wikiLink.href = item.wiki_url;
                     wikiLink.textContent = item.wiki_title || 'Wikipedia';
                     wikiLink.target = '_blank';
+                    wikiLink.className = 'wiki-link';
                     wikiCell.appendChild(wikiLink);
-                } else {
-                    wikiCell.textContent = 'N/A';
                 }
-                row.appendChild(turnCell);
-                row.appendChild(itemCell);
                 row.appendChild(wikiCell);
-                recommendationsList.appendChild(row);
+                
+                // Persona analysis results
+                item.persona_analysis.forEach(analysis => {
+                    const cell = document.createElement('td');
+                    
+                    const citation = document.createElement('div');
+                    citation.className = 'citation';
+                    citation.textContent = analysis.step_2.related_sentences;
+                    cell.appendChild(citation);
+                    
+                    const result = document.createElement('div');
+                    result.className = 'preference-result';
+                    const preferenceText = analysis.step_3.preference_satisfied;
+                    const explanation = analysis.step_3.explanation;
+                    result.innerHTML = `
+                        ${colorCodePreference(preferenceText)}
+                        <span class="popup">${explanation}</span>
+                    `;
+                    cell.appendChild(result);
+                    
+                    row.appendChild(cell);
+                });
+                
+                recommendationsBody.appendChild(row);
             });
         }
+
+        function colorCodePreference(preference) {
+            const colorMap = {
+                'yes': 'blue',
+                'no': 'red',
+                'not mentioned': 'yellow'
+            };
+            const color = colorMap[preference.toLowerCase()] || 'black';
+            return `<span style="color: ${color};">${preference}</span>`;
+        }
+
+        // Load persona data and set up table headers when the page loads
+        window.onload = loadPersona;
     </script>
 </body>
 </html>

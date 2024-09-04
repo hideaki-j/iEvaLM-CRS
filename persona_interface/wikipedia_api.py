@@ -91,7 +91,7 @@ def _get_full_text(title: str) -> str:
 
     page = next(iter(data["query"]["pages"].values()))
     full_text = page.get("extract", "No text found")
-    return full_text[:500]  # Return only the first 500 characters
+    return full_text[:2000]  # Return only the first N characters
 
 def wikipedia_search_process(query: str) -> dict:
     # First, try to generate URL using GPT

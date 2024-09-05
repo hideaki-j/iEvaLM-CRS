@@ -14,11 +14,13 @@ from datetime import datetime, timedelta
 # Suppress watchdog messages
 getLogger('watchdog.observers.inotify_buffer').setLevel(logging.WARNING)
 
+USED_CRS = "chatgpt_redial" # "kbrd_redial" or "chatgpt_redial"
+
 app = Flask(__name__)
 app.secret_key = 'dev'  # Required for session management
 
 # Initialize the CRSResponseGenerator
-response_generator = CRSResponseGenerator("kbrd_redial")
+response_generator = CRSResponseGenerator(USED_CRS)
 
 # New: In-memory storage for session data (replace with database in production)
 session_storage = {}

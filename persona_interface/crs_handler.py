@@ -13,6 +13,7 @@ os.chdir(project_root)
 
 crs_model_map = {
     "kbrd_redial": os.path.join("data/arena/crs_config/KBRD/kbrd_redial.yaml"),
+    "chatgpt_redial": os.path.join("data/arena/crs_config/ChatGPT/chatgpt_redial.yaml"),
 }
 
 from crs_arena.crs_fighter import CRSFighter
@@ -47,6 +48,7 @@ class CRSResponseGenerator:
 # Example usage
 if __name__ == "__main__":
     generator = CRSResponseGenerator("kbrd_redial")
+    # generator = CRSResponseGenerator("chatgpt_redial")
     
     dialogue_history = [
         "Hi",

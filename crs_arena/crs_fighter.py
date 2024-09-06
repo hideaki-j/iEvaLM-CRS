@@ -9,7 +9,7 @@ import json
 from typing import TYPE_CHECKING, Any, Dict, List
 
 from crs_arena.utils import get_crs_model
-from src.model.utils import get_entity
+from src.model.utils import get_entity, get_options
 
 if TYPE_CHECKING:
     from crs_arena.battle_manager import Message
@@ -39,6 +39,12 @@ class CRSFighter:
         # Load entity data
         self._load_entity_data()
 
+        # Get options
+        self.options = get_options(self.model.crs_model.kg_dataset)
+
+        # Initialize state
+        self.state = [0.0] * len(self.options[1])
+
         # Generation arguments
         self.response_generation_args = self._get_response_generation_args()
 
@@ -56,14 +62,15 @@ class CRSFighter:
 
     def _get_response_generation_args(self) -> Dict[str, Any]:
         """Returns response generation arguments."""
-        if "unicrs" in self.name:
-            return {
-                "movie_token": (
-                    "<movie>"
-                    if self.model.crs_model.kg_dataset.startswith("redial")
-                    else "<mask>"
-                ),
-            }
+        # NOTE: after the update, movie_token is not used anymore (ref: https://github.com/iai-group/iEvaLM-CRS/commit/80afc27523793a7f705d633be4ec3c8c7e4da7b5)
+        # if "unicrs" in self.name:
+        #     return {
+        #         "movie_token": (
+        #             "<movie>"
+        #             if self.model.crs_model.kg_dataset.startswith("redial")
+        #             else "<mask>"
+        #         ),
+        #     }
         return {}
 
     def _process_user_input(
@@ -114,9 +121,15 @@ class CRSFighter:
         conversation_dict = self._process_user_input(input_message, history)
 
         # Get response
-        response = self.model.get_response(
+        response, new_state = self.model.get_response(
             conversation_dict,
             self.id2entity,
+            self.options,
+            self.state,
             **self.response_generation_args,
         )
+
+        # Update state (NOTE: State is not used in recommendation-chat switching)
+        self.state = new_state
+
         return response

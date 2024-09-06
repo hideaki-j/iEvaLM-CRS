@@ -158,21 +158,18 @@ def get_options(dataset: str) -> Tuple[str, Dict[str, str]]:
         A tuple containing the prompt and a dictionary of options.
     """
     if "redial" in dataset:
+        # Instructions inspired by Free-Form Chit-Chat
         instructions = (
             "To recommend me items that I will accept, you can choose one of "
-            "the following options.\nA: ask my preference for genre\nB: ask my "
-            "preference for actor\nC: ask my preference for director\nD: I can "
-            "directly give recommendations\nPlease enter the option character. "
-            "Please only response a character."
+            "the following options.\nA: If you do not have enough information "
+            "about user preference, you should ask the user for his preference "
+            "(option A).\nB: If you have enough information about user "
+            "preference, you can give recommendation (option B).\nPlease enter "
+            "the option character. Please only response a character."
         )
         options = {
-            "A": {"attribute": "genre", "template": "What genre do you like?"},
-            "B": {"attribute": "actor", "template": "Which star do you like?"},
-            "C": {
-                "attribute": "director",
-                "template": "Which director do you like?",
-            },
-            "D": {"attribute": "recommend", "template": ""},
+            "A": {"attribute": None, "template": None},
+            "B": {"attribute": None, "template": None},
         }
         return instructions, options
     elif "opendialkg" in dataset:

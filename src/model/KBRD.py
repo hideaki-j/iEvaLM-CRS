@@ -263,10 +263,15 @@ class KBRD:
         gen_str = self.tokenizer.decode(gen_seqs[0], skip_special_tokens=True)
         return gen_inputs, gen_str
 
-    def get_choice(self, gen_inputs, options, state, conv_dict=None):
-        state = torch.as_tensor(state, device=self.device)
+    def get_choice(self, encoded_instructions, gen_inputs, options, state, conv_dict=None):
+        # Merge gen_inputs and instructions (NOTE: This is just a concatenation; not sure if it's the best way to do it)
+        inputs = {
+            'input_ids': torch.cat([encoded_instructions['input_ids'], gen_inputs['input_ids']], dim=1),
+            'attention_mask': torch.cat([encoded_instructions['attention_mask'], gen_inputs['attention_mask']], dim=1),
+            'decoder_user_embeds': gen_inputs['decoder_user_embeds']
+        }
         outputs = self.accelerator.unwrap_model(self.crs_conv_model).generate(
-            **gen_inputs,
+            **inputs,
             min_new_tokens=2,
             max_new_tokens=2,
             num_beams=1,
@@ -278,10 +283,33 @@ class KBRD:
             for op in options
         ]
         option_scores = outputs.scores[-1][0][option_token_ids]
-        option_scores += state
-        option_with_max_score = options[torch.argmax(option_scores)]
 
-        return option_with_max_score
+        # def top_p_sampling(scores, p=0.9) -> int:
+        #     # Sort the probabilities and their corresponding indices
+        #     sorted_scores, sorted_indices = torch.sort(scores, descending=True)
+            
+        #     # Compute the cumulative sum of sorted probabilities
+        #     cumulative_probs = torch.cumsum(F.softmax(sorted_scores, dim=-1), dim=-1)
+            
+        #     # Find the cutoff index where cumulative probability exceeds p
+        #     cutoff_index = torch.where(cumulative_probs > p)[0][0].item()
+            
+        #     # Select the tokens corresponding to the top-p probabilities
+        #     selected_indices = sorted_indices[:cutoff_index + 1]
+        #     selected_probs = F.softmax(sorted_scores[:cutoff_index + 1], dim=-1)
+            
+        #     # Sample from the selected tokens based on their probabilities
+        #     selected_token = torch.multinomial(selected_probs, num_samples=1).item()
+            
+        #     return selected_indices[selected_token].item()
+
+        # selected_option_index = top_p_sampling(option_scores)
+
+        # Probabilistic choice
+        option_scores = torch.softmax(option_scores, dim=0)
+        selected_option_index = torch.multinomial(option_scores, num_samples=1).item()
+        selected_option = options[selected_option_index]
+        return selected_option
 
     def get_response(
         self,
@@ -304,8 +332,19 @@ class KBRD:
         generated_inputs, generated_response = self.get_conv(conv_dict)
         options_letter = list(options[1].keys())
 
-        # Get the choice between recommend and generate
-        choice = self.get_choice(generated_inputs, options_letter, state)
+        instructions = options[0]
+
+        encoded_instructions = self.tokenizer(
+            instructions,
+            truncation=True,
+            max_length=self.context_max_length,
+            padding=self.padding,
+            pad_to_multiple_of=self.pad_to_multiple_of,
+            return_tensors="pt"
+        )
+        encoded_instructions = {k: v.to(self.device) for k, v in encoded_instructions.items()}
+
+        choice = self.get_choice(encoded_instructions, generated_inputs, options_letter, state)
 
         if choice == options_letter[-1]:
             # Generate a recommendation
@@ -318,14 +357,7 @@ class KBRD:
                 f"{recommended_items_str}"
             )
         else:
-            # Generate a response to ask for preferences. The fallback is to
-            # use the generated response.
-            response = (
-                options[1].get(choice, {}).get("template", generated_response)
-            )
-
-            # Update the state
-            state[options_letter.index(choice)] = -1e5
+            response = generated_response
 
         return response, state
 

@@ -15,7 +15,6 @@ import streamlit as st
 import wget
 import yaml
 from huggingface_hub import HfApi
-from streamlit_gsheets import GSheetsConnection
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -145,42 +144,67 @@ async def upload_conversation_logs_to_hf(
         )
 
 
-async def upload_feedback_to_gsheet(
-    row: Dict[str, str], worksheet: str = "votes"
+async def upload_feedback_to_hf(
+    row: Dict[str, str], csv_filename: str = "feedback.csv"
 ) -> None:
-    """Uploads feedback to Google Sheets asynchronously.
+    """Uploads feedback to Hugging Face CSV file asynchronously.
 
     Args:
-        row: Row to upload to the worksheet.
-        worksheet: Name of the worksheet to upload the feedback to.
+        row: Row to append to the CSV file.
+        csv_filename: Name of the CSV file in the Hugging Face repository.
 
     Raises:
         Exception: If an error occurs during the upload.
     """
-    logging.debug("Uploading feedback to Google Sheets.")
+    logging.debug("Uploading feedback to Hugging Face CSV.")
     try:
         await asyncio.get_event_loop().run_in_executor(
-            None, lambda: _upload_feedback_to_gsheet_sync(row, worksheet)
+            None, lambda: _upload_feedback_to_hf_sync(row, csv_filename)
         )
     except Exception as e:
-        logging.error(f"Error uploading feedback to Google Sheets: {e}")
+        logging.error(f"Error uploading feedback to Hugging Face CSV: {e}")
 
 
-def _upload_feedback_to_gsheet_sync(
-    row: Dict[str, str], worksheet: str
+def _upload_feedback_to_hf_sync(
+    row: Dict[str, str], csv_filename: str
 ) -> None:
-    """Uploads feedback to Google Sheets synchronously.
+    """Uploads feedback to Hugging Face CSV file synchronously.
 
     Args:
-        row: Row to upload to the worksheet.
-        worksheet: Name of the worksheet to upload the feedback to.
+        row: Row to append to the CSV file.
+        csv_filename: Name of the CSV file in the Hugging Face repository.
     """
-    gs_connection = st.connection("gsheets", type=GSheetsConnection)
-    df = gs_connection.read(worksheet=worksheet)
+    try:
+        # Download the existing CSV file
+        existing_csv = HF_API.hf_hub_download(
+            repo_id=st.secrets.hf.dataset_repo,
+            filename=csv_filename,
+            repo_type="dataset",
+        )
+        df = pd.read_csv(existing_csv)
+    except Exception:
+        # If the file doesn't exist, create a new DataFrame
+        df = pd.DataFrame(columns=row.keys())
+
     if df[df["id"] == row["id"]].empty:
         df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
     else:
-        # Add feedback to existing row
+        # Update feedback for existing row
         df.loc[df["id"] == row["id"], "feedback"] = row["feedback"]
-    gs_connection.update(data=df, worksheet=worksheet)
-    logging.debug("Feedback uploaded to Google Sheets.")
+
+    # Save the updated DataFrame to a temporary CSV file
+    temp_csv = "temp_feedback.csv"
+    df.to_csv(temp_csv, index=False)
+
+    # Upload the updated CSV file to Hugging Face
+    HF_API.upload_file(
+        path_or_fileobj=temp_csv,
+        path_in_repo=csv_filename,
+        repo_id=st.secrets.hf.dataset_repo,
+        repo_type="dataset",
+    )
+
+    # Remove the temporary file
+    os.remove(temp_csv)
+
+    logging.debug("Feedback uploaded to Hugging Face CSV.")

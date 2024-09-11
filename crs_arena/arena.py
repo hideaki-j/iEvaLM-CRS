@@ -40,7 +40,7 @@ from utils import (
     download_and_extract_item_embeddings,
     download_and_extract_models,
     upload_conversation_logs_to_hf,
-    upload_feedback_to_gsheet,
+    upload_feedback_to_hf,
 )
 
 from src.model.crb_crs.recommender import *
@@ -82,7 +82,7 @@ def record_vote(vote: str) -> None:
     crs2_model: CRSFighter = st.session_state["crs2"]
     last_row_id = str(datetime.now())
     asyncio.run(
-        upload_feedback_to_gsheet(
+        upload_feedback_to_hf(
             {
                 "id": last_row_id,
                 "user_id": user_id,
@@ -90,7 +90,7 @@ def record_vote(vote: str) -> None:
                 "crs2": crs2_model.name,
                 "vote": vote,
             },
-            worksheet="votes",
+            csv_filename="votes.csv",
         )
     )
     feedback_dialog(row_id=last_row_id)
@@ -106,8 +106,9 @@ def record_feedback(feedback: str, row_id: int) -> None:
         user_id: Unique user ID.
     """
     asyncio.run(
-        upload_feedback_to_gsheet(
-            {"id": row_id, "feedback": feedback}, "feedback"
+        upload_feedback_to_hf(
+            {"id": row_id, "feedback": feedback},
+            csv_filename="feedback.csv",
         )
     )
 
@@ -137,7 +138,7 @@ def end_conversation(crs: CRSFighter, sentiment: str) -> None:
     # Update the conversation count
     CONVERSATION_COUNTS[crs.name] += 1
 
-    # Asynchronously save the conversation logs to Hugging Face Hub
+    # Asynchronously save the conversation logs to Hugging Face
     asyncio.run(
         upload_conversation_logs_to_hf(
             log_file_path, f"conversation_logs/{user_id}_{crs.name}.json"

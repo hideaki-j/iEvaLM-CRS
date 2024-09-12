@@ -45,6 +45,8 @@ from utils import (
 
 from src.model.crb_crs.recommender import *
 
+from prolific import show_terms_and_conditions, check_user_num_turns, N_USER_TURNS_REQUIRED, show_completion_code
+
 # A message is a dictionary with two keys: role and message.
 Message = Dict[str, str]
 
@@ -126,6 +128,12 @@ def end_conversation(crs: CRSFighter, sentiment: str) -> None:
     messages: List[Message] = deepcopy(
         st.session_state[f"messages_{crs.fighter_id}"]
     )
+    
+    if not check_user_num_turns(messages):
+        st.toast("Please have at least 5 turns of conversation before finishing the conversation.", icon="⚠️")
+        time.sleep(5)
+        return
+    
     messages.append({"role": "metadata", "sentiment": sentiment})
     user_id = st.session_state["user_id"]
     logger.info(f"User {user_id} ended conversation with {crs.name}.")
@@ -269,13 +277,12 @@ def feedback_dialog(row_id: int) -> None:
         row_id: Unique row ID of the vote.
     """
     feedback_text = st.text_area(
-        "(Optional) You can provide more detailed feedback below:"
+        "You can provide more detailed feedback below:"
     )
     if st.button("Finish", use_container_width=True):
         record_feedback(feedback_text, row_id)
-        # Restart the app
-        st.session_state.clear()
-        st.rerun()
+        st.session_state.completed = True
+        st.rerun()  # This will trigger a rerun of the app, showing the completion message
 
 
 # Streamlit app
@@ -289,6 +296,22 @@ if "user_id" not in st.session_state:
     st.session_state["user_id"] = get_unique_user_id()
     st.session_state["crs1"], st.session_state["crs2"] = get_crs_fighters()
 
+# Create a placeholder for the completion message at the top
+completion_placeholder = st.empty()
+
+# Check for completion at the very beginning
+if 'completed' in st.session_state and st.session_state.completed:
+    show_completion_code(completion_placeholder)
+    st.stop()
+
+# Show terms and conditions popup
+if "terms_accepted" not in st.session_state:
+    st.session_state.terms_accepted = False
+
+if not st.session_state.terms_accepted:
+    st.session_state.terms_accepted = show_terms_and_conditions()
+    if not st.session_state.terms_accepted:
+        st.stop()
 
 # Introduction
 st.title(":gun: CRS Arena")
@@ -303,12 +326,12 @@ st.write(
     "* Chat with each CRS (one after the other) to get **movie recommendations** "
     "up until you feel statisfied or frustrated.\n"
     "* Please be patient as some CRSs may take a few seconds to respond.\n"
-    "* Try to send several messages to each CRS to get a better sense of their "
-    "capabilities. Don't quit after the first message!\n"
+    "* Ensure you send at least 5 messages to each CRS to get a better sense of their "
+    "capabilities.\n"
     "* To finish chatting with a CRS, click on the button corresponding to "
     "your feeling: frustrated or satisfied.\n"
     "* Vote on which CRS you prefer or declare a tie.\n"
-    "* (Optional) Provide more detailed feedback after voting.\n"
+    "* Provide more detailed feedback after voting.\n"
 )
 
 # Side-by-Side Battle
@@ -369,21 +392,4 @@ container_col3.button(
     on_click=record_vote,
     kwargs={"vote": "tie"},
     disabled=not st.session_state["vote_enabled"],
-)
-
-# Terms of service
-st.header("Terms of Service")
-st.write(
-    "By using this application, you agree to the following terms of service:  \n"
-    "The service is a research platform. It may produce offensive content. "
-    "Please do not upload any private information in the chat. The service "
-    "collects the chat data and the user's vote, which may be released under a "
-    "Creative Commons Attribution (CC-BY) or a similar license."
-)
-
-# Contact information
-st.header("Contact Information")
-st.write(
-    "For any questions, concerns, feedback, or bug reports, please contact "
-    "Nolwenn Bernard at <nolwenn.m.bernard@uis.no>."
 )

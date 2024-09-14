@@ -130,3 +130,5 @@ dmypy.json
 
 data/**
 .streamlit/secrets.toml
+
+run_server.sh

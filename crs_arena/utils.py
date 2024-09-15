@@ -21,7 +21,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.model.crs_model import CRSModel
 
 # Initialize Hugging Face API
-HF_API = HfApi(token=st.secrets.hf.hf_token)
+HF_API = HfApi(token=st.secrets.hf_token)
 
 
 @st.cache_resource(show_spinner="Loading CRS...", max_entries=5)
@@ -47,7 +47,7 @@ def get_crs_model(model_name: str, model_config_file: str) -> CRSModel:
     model_args = yaml.safe_load(open(model_config_file, "r"))
 
     if "chatgpt" in model_name:
-        openai.api_key = st.secrets.openai.api_key
+        openai_api_key = st.secrets.openai_api_key
 
     # Extract crs model from name
     name = model_name.split("_")[0]
@@ -65,7 +65,7 @@ def execute_sql_query(query: str, params: Dict[str, str]) -> List[Any]:
     Returns:
         Output of the query.
     """
-    connection = sqlite3.connect(st.secrets.db.vote_db)
+    connection = sqlite3.connect(st.secrets.vote_db)
     cursor = connection.cursor().execute(query, params)
     output = cursor.fetchall()
     connection.commit()
@@ -133,7 +133,7 @@ async def upload_conversation_logs_to_hf(
             lambda: HF_API.upload_file(
                 path_or_fileobj=conversation_log_file_path,
                 path_in_repo=repo_filename,
-                repo_id=st.secrets.hf.dataset_repo,
+                repo_id=st.secrets.hf_dataset_repo,
                 repo_type="dataset",
             ),
         )
@@ -177,7 +177,7 @@ def _upload_feedback_to_hf_sync(
     try:
         # Download the existing CSV file
         existing_csv = HF_API.hf_hub_download(
-            repo_id=st.secrets.hf.dataset_repo,
+            repo_id=st.secrets.hf_dataset_repo,
             filename=csv_filename,
             repo_type="dataset",
         )
@@ -200,7 +200,7 @@ def _upload_feedback_to_hf_sync(
     HF_API.upload_file(
         path_or_fileobj=temp_csv,
         path_in_repo=csv_filename,
-        repo_id=st.secrets.hf.dataset_repo,
+        repo_id=st.secrets.hf_dataset_repo,
         repo_type="dataset",
     )
 

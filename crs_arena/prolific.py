@@ -18,7 +18,7 @@ import asyncio
 from utils import upload_feedback_to_hf
 from streamlit import secrets
 
-N_USER_TURNS_REQUIRED = 0  # or whatever number you've set
+N_USER_TURNS_REQUIRED = 5  # or whatever number you've set
 
 async def write_prolific_id(prolific_id: str):
     data = {
@@ -60,10 +60,10 @@ def check_user_num_turns(messages):
 
 def show_completion_code(placeholder):
     print('DEBUG: show_completion_code called')
-    completion_code = secrets.prolific.prolific_completion_code
+    completion_code = secrets.prolific_completion_code
     with placeholder.container():
         st.markdown("# Thank you for participating!")
-        st.markdown("## Your completion code is:")
-        st.markdown(f"### {completion_code}")
-        st.markdown("Please copy this code and submit it on Prolific.")
+        st.markdown("Please click the link below to complete your submission:")
+        st.markdown(f"Your completion code is: {completion_code}")
+        st.markdown(f"[Complete Submission](https://app.prolific.co/submissions/complete?cc={completion_code})")
     print('DEBUG: Completion message should be displayed')

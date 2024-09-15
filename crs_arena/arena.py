@@ -270,19 +270,30 @@ def get_crs_response(crs: CRSFighter, message: str):
 def feedback_dialog(row_id: int) -> None:
     """Pop-up dialog to provide feedback after voting.
 
-    Feedback is optional and can be used to provide more detailed information
-    about the user's vote.
+    Feedback is mandatory and must be more than 30 words.
 
     Args:
         row_id: Unique row ID of the vote.
     """
-    feedback_text = st.text_area(
-        "You can provide more detailed feedback below:"
-    )
-    if st.button("Finish", use_container_width=True):
-        record_feedback(feedback_text, row_id)
-        st.session_state.completed = True
-        st.rerun()  # This will trigger a rerun of the app, showing the completion message
+    while True:
+        feedback_text = st.text_area(
+            "Please provide detailed feedback on your vote (more than 30 words)."
+        )
+        word_count = len(feedback_text.split())
+        
+        if st.button("Submit Feedback", use_container_width=True):
+            if word_count <= 30:
+                st.toast("Please provide feedback with more than 30 words.", icon="⚠️")
+                time.sleep(5)
+                st.experimental_rerun()
+            else:
+                record_feedback(feedback_text, row_id)
+                st.session_state.completed = True
+                st.rerun()  # This will trigger a rerun of the app, showing the completion message
+        
+        # Break the loop if the dialog is closed without submitting
+        if st.button("Cancel"):
+            break
 
 
 # Streamlit app

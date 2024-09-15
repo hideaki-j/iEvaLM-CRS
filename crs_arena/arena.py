@@ -269,31 +269,30 @@ def get_crs_response(crs: CRSFighter, message: str):
 @st.dialog("Your vote has been submitted! Thank you!")
 def feedback_dialog(row_id: int) -> None:
     """Pop-up dialog to provide feedback after voting.
-
-    Feedback is mandatory and must be more than 30 words.
-
+    Feedback is mandatory and must be more than 20 words.
     Args:
         row_id: Unique row ID of the vote.
     """
-    while True:
-        feedback_text = st.text_area(
-            "Please provide detailed feedback on your vote (more than 30 words)."
-        )
-        word_count = len(feedback_text.split())
-        
-        if st.button("Submit Feedback", use_container_width=True):
-            if word_count <= 30:
-                st.toast("Please provide feedback with more than 30 words.", icon="⚠️")
-                time.sleep(5)
-                st.experimental_rerun()
-            else:
-                record_feedback(feedback_text, row_id)
-                st.session_state.completed = True
-                st.rerun()  # This will trigger a rerun of the app, showing the completion message
-        
-        # Break the loop if the dialog is closed without submitting
-        if st.button("Cancel"):
-            break
+    feedback_text = st.text_area(
+        "Please provide detailed feedback on your vote (more than 20 words).",
+        key=f"feedback_text_{row_id}"
+    )
+    word_count = len(feedback_text.split())
+    
+    if st.button("Submit Feedback", use_container_width=True):
+        if word_count <= 20:
+            print(f"DEBUG: word_count = {word_count}")
+            st.error(f"Your feedback must be more than 20 words. Please add more details. Word count: {word_count}")
+            time.sleep(5)
+        else:
+            print(f"DEBUG: record_feedback called with feedback_text = {feedback_text} and word_count = {word_count}")
+            record_feedback(feedback_text, row_id)
+            st.session_state.completed = True
+            st.rerun()  # This will trigger a rerun of the app, showing the completion message
+    
+    # Break the loop if the dialog is closed without submitting
+    if st.button("Cancel"):
+        st.stop()
 
 
 # Streamlit app
